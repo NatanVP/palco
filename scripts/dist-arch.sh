@@ -17,4 +17,4 @@ mkdir -p "$work"
 cp "$root/packaging/arch/PKGBUILD" "$root/LICENSE" "$deb" "$work/"
 cd "$work"
 PALCO_VERSION="$version" PALCO_DEB_SHA256="$deb_sha256" PALCO_LICENSE_SHA256="$license_sha256" \
-  PKGDEST="$root/dist" BUILDDIR="$work/build" SRCDEST="$work" makepkg --force
+  PKGDEST="$root/dist" BUILDDIR="$work/build" SRCDEST="$work" makepkg --force "$@"

@@ -52,9 +52,21 @@ describe('configuração de distribuição Linux', () => {
     expect(workflow).toContain('npm ci')
     for (const gate of ['npm run typecheck', 'npm test', 'npm run build', 'npm run dist:linux']) expect(workflow).toContain(gate)
     expect(workflow).toContain('gh release create'); expect(workflow).toContain('--verify-tag')
-    expect(workflow).toContain('contents: write')
     expect(workflow).toContain('GITHUB_TOKEN')
+    // só o job que publica, e só em tag, escreve no repositório
+    expect(workflow).toMatch(/^permissions:\n {2}contents: read$/m)
+    expect(workflow.match(/contents: write/g)).toHaveLength(1)
+    const publish = workflow.split('\n  publicar:\n')[1]
+    expect(publish).toContain('contents: write')
+    expect(publish).toContain("if: github.event_name == 'push' && github.ref_type == 'tag'")
+    expect(publish).toContain('needs: [linux, arch]')
+    // os nomes publicados são os que o install.sh baixa
+    const installer = readFileSync(join(root, 'install.sh'), 'utf8')
+    for (const asset of ['palco-x86_64.pkg.tar.zst', 'palco-x86_64.flatpak', 'SHA256SUMS']) {
+      expect(publish).toContain(asset)
+      expect(installer).toContain(asset)
+    }
     const readme = readFileSync(join(root, 'README.md'), 'utf8')
-    for (const instruction of ['chmod +x ./palco-*.AppImage', 'sudo apt install ./palco_*.deb', 'npm run dist:linux']) expect(readme).toContain(instruction)
+    for (const instruction of ['chmod +x ./palco-*.AppImage', 'sudo apt install ./palco_*.deb', 'npm run dist:linux', 'install.sh | bash -s -- --pacman', 'install.sh | bash -s -- --flatpak']) expect(readme).toContain(instruction)
   })
 })

@@ -1,7 +1,7 @@
 # Pacote do palco para Arch e derivados, montado a partir do .deb gerado pelo electron-builder.
 # Local: `npm run dist:arch`. No AUR, use a URL da release e hashes SHA-256 fixos em `sha256sums`.
 pkgname=palco-bin
-pkgver=${PALCO_VERSION:-0.1.0}
+pkgver=${PALCO_VERSION:-0.1.1}
 pkgrel=1
 pkgdesc='Canvas para organizar terminais, agentes de IA e projetos'
 arch=('x86_64')
