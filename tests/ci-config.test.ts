@@ -18,3 +18,15 @@ it('o selo aponta para o workflow no repositório do palco', () => {
   expect(cabecalho).toMatch(/https:\/\/github\.com\/NatanVP\/palco\/actions\/workflows\/ci\.yml[")]/)
   expect(existsSync('.github/workflows/ci.yml')).toBe(true)
 })
+
+it('fixa as actions externas por SHA completo e documenta a versão', () => {
+  for (const file of ['.github/workflows/ci.yml', '.github/workflows/release.yml']) {
+    const workflow = readFileSync(file, 'utf8')
+    const uses = workflow.split('\n').filter(line => /uses: actions\/(checkout|setup-node)@/.test(line))
+    expect(uses).toHaveLength(2)
+    expect(uses).toEqual(expect.arrayContaining([
+      expect.stringMatching(/uses: actions\/checkout@[0-9a-f]{40} # v7\.\d+\.\d+$/),
+      expect.stringMatching(/uses: actions\/setup-node@[0-9a-f]{40} # v7\.\d+\.\d+$/)
+    ]))
+  }
+})

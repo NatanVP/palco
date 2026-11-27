@@ -41,7 +41,7 @@ import { RoleStore } from './agents/roles'
 import { PresetStore, AgentCatalog } from './agents/presets'
 import { app, BrowserWindow, dialog, Menu, Notification, safeStorage, session, shell, webContents, type WebContents } from 'electron'
 import { QUIET_MS } from './activity-monitor'
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { readdirSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir, cpus, totalmem, release } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -68,15 +68,13 @@ import { installMicPolicy, MicGate } from './voice/permission'
 import { VoiceService } from './voice/voice-service'
 import { allowGuestNavigation, createUrlPolicy, enforceWebviewPolicy, isPortalUrl } from './security'
 import { withAskLogging } from './log'
-import { cleanStaleSocketDirs, markOwned } from './socket-cleanup'
+import { cleanStaleSocketDirs, createSocketDirectory, markOwned, removeOwnedSocketDirectory } from './socket-cleanup'
 import { setupSingleInstance } from './single-instance'
 import { resolveRuntimePaths } from './runtime-paths'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const runtimePaths = resolveRuntimePaths({ packaged: app.isPackaged, resourcesPath: process.resourcesPath, appPath: app.getAppPath() })
-const runtimeDir = process.env.XDG_RUNTIME_DIR ?? tmpdir()
-const socketDir = join(runtimeDir, `palco-${process.pid}`)
-const socketPath = join(socketDir, 'palco.sock')
+let socketDir: string | undefined
 
 const indexHtml = join(here, '../renderer/index.html')
 const isTrustedUrl = createUrlPolicy({ indexFileUrl: pathToFileURL(indexHtml).href, devUrl: process.env.ELECTRON_RENDERER_URL })
@@ -147,9 +145,11 @@ async function boot(): Promise<void> {
   const micGate = new MicGate()
   installMicPolicy(session.defaultSession, { gate: micGate, isApp: (contents) => !!win && !win.isDestroyed() && contents === win.webContents, isTrustedUrl })
   app.on('session-created', (created) => { if (created !== session.defaultSession) installMicPolicy(created, null) })
-  for (const dir of cleanStaleSocketDirs(runtimeDir, process.pid)) console.info(`[palco] socket antigo removido: ${dir}`)
-  mkdirSync(socketDir, { recursive: true, mode: 0o700 })
+  const cleanupRoots = new Set([process.env.XDG_RUNTIME_DIR, tmpdir()].filter((dir): dir is string => !!dir))
+  for (const root of cleanupRoots) for (const dir of cleanStaleSocketDirs(root, process.pid)) console.info(`[palco] socket antigo removido: ${dir}`)
+  socketDir = createSocketDirectory(process.env.XDG_RUNTIME_DIR, process.pid)
   markOwned(socketDir, process.pid)
+  const socketPath = join(socketDir, 'palco.sock')
 
   const dataRoots = new DataRoot(join(app.getPath('userData'), 'palco-data-location.json'), join(homedir(), '.palco'))
   const dataRoot = dataRoots.current()
@@ -523,7 +523,7 @@ app.on('before-quit', (event) => {
       try { await pendingDataOperation(); app.relaunch() }
       catch (error) { dialog.showErrorBox(mt('Não foi possível alterar os dados'), error instanceof Error ? localizeMessage(error.message) : mt('A operação falhou; os arquivos de recuperação foram preservados.')) }
     }
-    rmSync(socketDir, { recursive: true, force: true })
+    if (socketDir) removeOwnedSocketDirectory(socketDir, process.pid)
     app.quit()
   })()
 })
