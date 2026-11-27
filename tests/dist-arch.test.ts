@@ -41,6 +41,17 @@ describe('integridade do pacote Arch', () => {
     expect(readFileSync(join(dir, 'packaging/arch/PKGBUILD'), 'utf8')).not.toContain('SKIP')
   })
 
+  it('repassa opções ao makepkg, para montar num contêiner sem as dependências', () => {
+    const dir = fixture(), mockBin = join(dir, 'mock-bin'), capture = join(dir, 'capture')
+    mkdirSync(mockBin)
+    const makepkg = join(mockBin, 'makepkg')
+    writeFileSync(makepkg, '#!/bin/bash\nprintf "%s " "$@" > "$CAPTURE"\n')
+    chmodSync(makepkg, 0o755)
+    const run = spawnSync('bash', [join(dir, 'scripts/dist-arch.sh'), '--nodeps'], { encoding: 'utf8', env: { ...process.env, PATH: `${mockBin}:${process.env.PATH}`, CAPTURE: capture } })
+    expect(run.status, run.stderr).toBe(0)
+    expect(readFileSync(capture, 'utf8').trim()).toBe('--force --nodeps')
+  })
+
   it('falha com instrução clara quando os hashes não foram definidos', () => {
     const dir = fixture()
     const run = spawnSync('bash', [join(dir, 'packaging/arch/PKGBUILD')], {

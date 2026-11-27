@@ -1,7 +1,7 @@
 {
   "name": "palco",
   "desktopName": "palco",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Ambiente visual para organizar terminais, agentes de IA e projetos em um canvas.",
   "type": "module",

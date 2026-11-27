@@ -1,19 +1,29 @@
 name: Release Linux
 
+# Em tag v*: monta os pacotes e publica a release. Em PR que mexe no empacotamento: só monta.
 on:
   push:
     tags:
       - 'v*'
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'packaging/**'
+      - 'scripts/**'
+      - 'electron-builder.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'install.sh'
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   TZ: UTC
   LANG: C.UTF-8
 
 jobs:
-  release:
+  linux:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -24,16 +34,82 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Preparar compilação do node-pty
+      - name: Preparar compilação do node-pty e Flatpak
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential python3
+          sudo apt-get install --no-install-recommends -y build-essential python3 flatpak
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: npm run dist:linux
+      - name: Montar o Flatpak
+        run: |
+          flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak --user install --noninteractive flathub org.freedesktop.Platform//26.08
+          npx --no-install install-electron
+          npm run dist:flatpak
+          flatpak --user install --noninteractive --bundle dist/palco-*.flatpak
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.flatpak
+          if-no-files-found: error
+          retention-days: 5
+
+  arch:
+    needs: linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: archlinux:base-devel@sha256:949ecb1661609ab7e8f6854ba03efd62792e7a796313738e94b040c095c20d91
+    steps:
+      - run: pacman -Syu --noconfirm --needed nodejs
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: linux
+          path: dist
+      - name: Montar o pacote
+        # O makepkg não roda como root.
+        run: |
+          useradd --create-home montador
+          chown -R montador .
+          runuser -u montador -- bash scripts/dist-arch.sh --nodeps
+      - name: Conferir a instalação com as dependências
+        run: |
+          pacman -U --noconfirm dist/palco-bin-*.pkg.tar.zst
+          test -x /usr/bin/palco
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: arch
+          path: dist/palco-bin-*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 5
+
+  publicar:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [linux, arch]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
       - name: Publicar release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "$GITHUB_REF_NAME" dist/*.AppImage dist/*.deb --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        # O install.sh baixa por nomes que não mudam de uma versão para outra.
+        run: |
+          cd dist
+          mv palco-bin-*.pkg.tar.zst palco-x86_64.pkg.tar.zst
+          mv palco-*.flatpak palco-x86_64.flatpak
+          sha256sum *.AppImage *.deb *.pkg.tar.zst *.flatpak > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" *.AppImage *.deb *.pkg.tar.zst *.flatpak SHA256SUMS --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag

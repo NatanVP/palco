@@ -100,9 +100,28 @@ Os ambientes tmux, SSH e Docker são opcionais: precisam das ferramentas corresp
 
 ## Instalar
 
-Baixe o **AppImage** ou o **`.deb`** na página de [Releases](https://github.com/NatanVP/palco/releases).
+Para **Linux x86_64** com ambiente gráfico. No terminal, escolha **um** dos dois:
 
-Os pacotes são para **Linux x86_64**, com ambiente gráfico compatível com o Electron.
+**Arch, CachyOS e derivados (pacman):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NatanVP/palco/main/install.sh | bash -s -- --pacman
+```
+
+**Flatpak:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NatanVP/palco/main/install.sh | bash -s -- --flatpak
+```
+
+Para **atualizar**, feche o palco e rode o mesmo comando de novo. O [`install.sh`](install.sh) baixa o pacote da última [release](https://github.com/NatanVP/palco/releases), confere o SHA-256 publicado junto dela e chama o `pacman` (com `sudo`) ou o `flatpak`, que perguntam antes de instalar. Se preferir, leia o script antes de rodar.
+
+> [!WARNING]
+> O Flatpak **não isola o palco**. Ele serve só para instalar e atualizar: o app roda direto no sistema (via `flatpak-spawn --host`), com todo o acesso da sua conta, para os terminais enxergarem `claude`, `codex`, `git` e o resto. A permissão `org.freedesktop.Flatpak` dá exatamente esse acesso. O app usa as bibliotecas do sistema, então precisa das mesmas dependências do pacote `.deb` (GTK 3, NSS, ALSA etc.) e de _user namespaces_ liberados para o sandbox do Chromium.
+
+Os dois instalam o mesmo app e usam os mesmos dados (`~/.palco`): com ambos instalados você teria duas entradas no menu, mas só um palco aberto por vez. Para remover: `sudo pacman -R palco-bin` ou `flatpak --user uninstall io.github.NatanVP.palco`.
+
+**Outras formas:** baixe o AppImage ou o `.deb` na página de [Releases](https://github.com/NatanVP/palco/releases).
 
 **AppImage:**
 
@@ -118,29 +137,6 @@ sudo apt install ./palco_*.deb
 ```
 
 Os agentes que você quiser usar (Claude Code, Codex etc.) são instalados e autenticados à parte. O palco não inclui assinaturas nem credenciais dos provedores.
-
-<details>
-<summary><strong>Flatpak (gerado localmente)</strong></summary>
-
-> [!WARNING]
-> Este Flatpak **não isola o palco**. Ele serve só para instalar e atualizar: o app roda direto no sistema (via `flatpak-spawn --host`), com todo o acesso da sua conta, para os terminais enxergarem `claude`, `codex`, `git` e o resto. A permissão `org.freedesktop.Flatpak` dá exatamente esse acesso.
-
-Com o [código-fonte preparado](#instalar) (`npm ci`) e o runtime instalado (`flatpak install flathub org.freedesktop.Platform//26.08`):
-
-```bash
-npm run dist:flatpak   # gera o repositório dist/flatpak/ e o arquivo dist/palco-<versão>.flatpak
-flatpak --user remote-add --no-gpg-verify palco-local "$PWD/dist/flatpak"
-flatpak --user install palco-local io.github.NatanVP.palco
-flatpak run io.github.NatanVP.palco
-```
-
-Para atualizar, **feche o palco**, rode `npm run dist:flatpak` de novo e depois `flatpak --user update io.github.NatanVP.palco`. Com ele aberto, a atualização tira do lugar os arquivos em uso e o CLI `palco` para de funcionar nos terminais até o app ser reaberto. Para remover: `flatpak --user uninstall io.github.NatanVP.palco` e `flatpak --user remote-delete palco-local`.
-
-- Os dados (`~/.palco`) e as configurações são os mesmos dos outros pacotes. Por isso só um palco fica aberto por vez: abrir o Flatpak com outro palco rodando só avisa o que já está aberto, sem iniciar um segundo.
-- Como o app usa as bibliotecas do sistema, precisa das mesmas dependências do pacote `.deb` (GTK 3, NSS, ALSA etc.) e de _user namespaces_ liberados para o sandbox do Chromium.
-- O repositório local não é assinado: use-o só na máquina que o gerou.
-
-</details>
 
 <details>
 <summary><strong>Compilar a partir do código-fonte</strong></summary>
@@ -159,6 +155,8 @@ npm start
 ```
 
 Para desenvolver com recarregamento automático: `npm run dev`. Para gerar o AppImage e o `.deb` localmente: `npm run dist:linux` (os pacotes ficam em `dist/`). No Arch e derivados, `npm run dist:arch` gera também o pacote `palco-bin`; instale com `sudo pacman -U dist/palco-bin-*.pkg.tar.zst`.
+
+Para gerar o Flatpak, instale o runtime (`flatpak install flathub org.freedesktop.Platform//26.08`) e rode `npm run dist:flatpak`: saem o repositório `dist/flatpak/` e o arquivo `dist/palco-<versão>.flatpak`, instalável com `flatpak --user install --or-update --bundle` seguido do arquivo.
 
 Para instalar um lançador no menu de aplicativos apontando para o checkout:
 
