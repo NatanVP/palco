@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar vulnerabilidade em privado
+    url: https://github.com/NatanVP/palco/security/advisories/new
+    about: Não abra issue pública com detalhes de vulnerabilidade. Leia também a política SECURITY.md.

@@ -153,6 +153,7 @@ export class TerminalManager {
     try { this.opts.beforeSpawn?.(node) } catch (err) { this.opts.onWarning?.(node.id, `skills do palco não instaladas: ${(err as Error).message}`) }
     const role = this.roleFor(node)
     const env = localShellEnvironment(process.env, this.opts.env)
+    env.COLORTERM ??= 'truecolor'
     const account = accountEnvironment(node, id => this.opts.resolveAccount?.(id))
     // A pasta da conta nunca é herdada do processo do palco: se ele foi aberto de dentro de um Claude
     // com CLAUDE_CONFIG_DIR (ex.: ~/.claude-sonnet), um terminal "Padrão" usaria essa conta sem aviso.

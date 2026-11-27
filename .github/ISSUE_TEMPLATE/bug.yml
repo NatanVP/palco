@@ -1,0 +1,62 @@
+name: Relatar problema
+description: Informe um defeito e como reproduzi-lo.
+title: "[Problema] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por ajudar a melhorar o palco.
+        Não publique credenciais, dados pessoais ou detalhes de vulnerabilidades.
+        Para segurança, siga https://github.com/NatanVP/palco/security/policy.
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do palco
+      description: Informe a versão ou o commit, se estiver usando o código-fonte.
+    validations:
+      required: true
+  - type: textarea
+    id: ambiente
+    attributes:
+      label: Ambiente
+      description: Distribuição Linux, versão, arquitetura e forma de instalação. Não inclua hostname ou nome de usuário.
+      placeholder: "Ex.: Ubuntu 24.04, x86_64, AppImage; agente e versão, se forem relevantes."
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      description: Use um exemplo pequeno e dados fictícios.
+      placeholder: |
+        1. Abra...
+        2. Faça...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: observado
+    attributes:
+      label: Resultado observado
+    validations:
+      required: true
+  - type: textarea
+    id: evidencias
+    attributes:
+      label: Logs ou capturas relevantes
+      description: Opcional. Revise e oculte e-mails, caminhos pessoais, tokens, cookies e notificações antes de anexar.
+  - type: checkboxes
+    id: conferencias
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Procurei relatos semelhantes nas issues existentes.
+          required: true
+        - label: Revisei o conteúdo e não estou publicando segredos, dados pessoais ou uma vulnerabilidade.
+          required: true

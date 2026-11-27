@@ -1,0 +1,42 @@
+name: Propor melhoria
+description: Explique uma necessidade e uma possível solução.
+title: "[Proposta] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefira descrever a necessidade antes da implementação.
+        Não inclua dados pessoais ou credenciais. Para vulnerabilidades, siga SECURITY.md.
+  - type: textarea
+    id: necessidade
+    attributes:
+      label: Qual problema você quer resolver?
+      description: Conte em que situação essa melhoria ajudaria.
+    validations:
+      required: true
+  - type: textarea
+    id: solucao
+    attributes:
+      label: Como você imagina a solução?
+      description: Descreva o resultado desejado para quem usa o app.
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      description: Opcional. Inclua formas de resolver a necessidade com os recursos atuais.
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Opcional. Exemplos e capturas devem usar dados fictícios.
+  - type: checkboxes
+    id: conferencias
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Procurei propostas semelhantes nas issues existentes.
+          required: true
+        - label: Revisei o conteúdo e removi dados pessoais e segredos.
+          required: true

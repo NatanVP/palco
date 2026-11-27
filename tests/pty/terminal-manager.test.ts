@@ -37,6 +37,38 @@ const make = () =>
 afterEach(() => tm?.killAll())
 
 describe('TerminalManager', () => {
+  it('passa truecolor ao PTY quando COLORTERM não foi definido', () => {
+    let spawnedEnv: Record<string, string> | undefined
+    const manager = new TerminalManager({
+      socketPath: '/tmp/palco-test/palco.sock',
+      palcoBin: '/opt/palco/bin/palco',
+      env: { SHELL: '/bin/bash', COLORTERM: undefined },
+      spawnPty: ((_file: string, _args: string[], options: { env: Record<string, string> }) => {
+        spawnedEnv = options.env
+        return { pid: 1, onData: () => ({ dispose() {} }), onExit: () => ({ dispose() {} }), write() {}, resize() {}, kill() {} }
+      }) as never
+    })
+    manager.spawn(node('colors'))
+    expect(spawnedEnv?.COLORTERM).toBe('truecolor')
+    manager.killAll()
+  })
+
+  it('preserva COLORTERM definido pelo ambiente do terminal', () => {
+    let spawnedEnv: Record<string, string> | undefined
+    const manager = new TerminalManager({
+      socketPath: '/tmp/palco-test/palco.sock',
+      palcoBin: '/opt/palco/bin/palco',
+      env: { SHELL: '/bin/bash', COLORTERM: '24bit' },
+      spawnPty: ((_file: string, _args: string[], options: { env: Record<string, string> }) => {
+        spawnedEnv = options.env
+        return { pid: 1, onData: () => ({ dispose() {} }), onExit: () => ({ dispose() {} }), write() {}, resize() {}, kill() {} }
+      }) as never
+    })
+    manager.spawn(node('colors'))
+    expect(spawnedEnv?.COLORTERM).toBe('24bit')
+    manager.killAll()
+  })
+
   it('injeta PALCO_TERMINAL_ID no shell', async () => {
     make()
     tm.spawn(node('t1'))

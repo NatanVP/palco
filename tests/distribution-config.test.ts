@@ -46,12 +46,12 @@ describe('configuração de distribuição Linux', () => {
   it('publica os artefatos gerados e documenta a instalação', () => {
     const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { desktopName: string; scripts: Record<string, string> }
     expect(pkg.desktopName).toBe('palco')
-    expect(pkg.scripts['dist:linux']).toBe('npm run build && electron-builder --linux AppImage deb')
+    expect(pkg.scripts['dist:linux']).toBe('npm run build && electron-builder --linux AppImage deb --publish never')
     expect(readFileSync(join(root, '.gitignore'), 'utf8')).toMatch(/^dist\/$/m)
     const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8')
     expect(workflow).toContain('npm ci')
     for (const gate of ['npm run typecheck', 'npm test', 'npm run build', 'npm run dist:linux']) expect(workflow).toContain(gate)
-    expect(workflow).toContain('gh release create')
+    expect(workflow).toContain('gh release create'); expect(workflow).toContain('--verify-tag')
     expect(workflow).toContain('contents: write')
     expect(workflow).toContain('GITHUB_TOKEN')
     const readme = readFileSync(join(root, 'README.md'), 'utf8')

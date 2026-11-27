@@ -261,21 +261,9 @@ Para reportar vulnerabilidades, siga a [política de segurança](SECURITY.md). N
 
 ## Como contribuir
 
-Contribuições de todo tipo são bem-vindas: correções, novos recursos, traduções, documentação e portes para outras plataformas.
+Contribuições de código, documentação, traduções e relatos de problemas são bem-vindas. Veja o [guia de contribuição](CONTRIBUTING.md) para preparar o ambiente, testar e enviar sua mudança por fork e pull request.
 
-1. Abra uma issue descrevendo o problema ou a proposta (com passos para reproduzir, quando for um bug).
-2. Faça mudanças focadas e rode as verificações:
-
-   ```bash
-   npm run typecheck
-   npm test
-   npm run build
-   ```
-
-3. Para mudanças visuais, confira também no app com `npm run dev`.
-4. Abra o pull request explicando a mudança e como você a verificou.
-
-Remova dados pessoais e credenciais de capturas, logs e exemplos. Para regenerar ícones: `npm run icons` (requer ImageMagick). Para gerar os avisos de dependências: `npm run notices`.
+Toda mudança entra por pull request para `main`, com o CI verde. Para vulnerabilidades, siga o canal privado de [SECURITY.md](SECURITY.md).
 
 ---
 
