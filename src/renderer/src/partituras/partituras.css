@@ -1,0 +1,46 @@
+.partitura-panel { position: absolute; z-index: 50; right: 12px; top: 56px; width: min(340px, calc(100% - 24px)); height: min(600px, calc(100% - 68px)); min-width: min(300px, calc(100% - 24px)); max-width: min(460px, calc(100% - 24px)); min-height: min(400px, calc(100% - 68px)); max-height: calc(100% - 68px); display: flex; flex-direction: column; resize: both; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--panel, #202022); backdrop-filter: blur(20px); box-shadow: 0 16px 48px #0005; }
+.partitura-panel button { cursor: pointer; color: inherit; background: transparent; border: 0; border-radius: 6px; padding: 5px 8px; text-align: left; }
+.partitura-panel button:hover { background: #8882; }
+.partitura-panel button:disabled { opacity: .45; cursor: default; }
+.partitura-panel-head { position: relative; display: flex; justify-content: space-between; padding: 10px 12px 12px; }
+.partitura-panel-head > button:first-child { border-radius: 50%; padding: 4px; background: #8881; }
+.partitura-empty { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; padding: 20px; }
+.partitura-empty > svg { opacity: .5; }
+.partitura-empty h2 { font-size: 15px; margin: 0; }
+.partitura-empty p { font-size: 13px; line-height: 1.65; margin: 0; opacity: .65; }
+.partitura-empty small, .partitura-hint { font-size: 11px; line-height: 1.65; opacity: .65; }
+.partitura-search { margin: 0 12px 10px; border-radius: 20px; padding: 7px 12px; background: #8882; border: 0; color: inherit; }
+.partitura-cards { flex: 1; overflow: auto; min-height: 0; padding: 0 12px; }
+.partitura-card { position: relative; display: flex; margin-bottom: 8px; background: #8881; border-radius: 16px; padding: 8px; }
+.partitura-card > button:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
+.partitura-card > button:first-child > svg { height: 60px; width: 100%; opacity: .55; }
+.partitura-actions { position: absolute; right: 8px; top: 32px; z-index: 2; padding: 5px; min-width: 170px; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; background: var(--panel, #202022); box-shadow: 0 8px 28px #0006; }
+.partitura-editor { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+.partitura-editor h2 { font-size: 15px; }
+.partitura-editor input:not([type=checkbox]) { padding: 8px; color: inherit; background: #8882; border: 1px solid var(--line); }
+.partitura-insert-option { padding: 8px 12px 0; font-size: 11px; }
+.partitura-hint { padding: 8px 12px 12px; text-align: center; }
+.partitura-confirm { padding: 16px; border-top: 1px solid var(--line); }
+.partitura-panel:focus { outline: none; }
+.partitura-mode { margin: 0 12px 8px; padding: 8px 10px; border: 1px solid #8a7cff66; border-radius: 10px; background: #8a7cff1f; font-size: 11px; line-height: 1.5; }
+.partitura-mode p { margin: 0 0 4px; }
+.partitura-mode .partitura-insert-option { display: block; padding: 0 0 4px; }
+.partitura-card { flex-wrap: wrap; }
+.partitura-card > button.partitura-update { flex-basis: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; font-size: 11px; background: #8a7cff26; }
+.partitura-review { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 0 14px 12px; font-size: 12px; line-height: 1.5; }
+.partitura-review h2 { margin: 0; font-size: 15px; }
+.partitura-review p { margin: 0; }
+.partitura-review > small { font-size: 11px; opacity: .65; }
+.partitura-review-list { flex: 1; min-height: 60px; overflow: auto; user-select: text; overflow-wrap: anywhere; }
+.partitura-review-list h3 { margin: 4px 0; font-size: 13px; }
+.partitura-review-list h4 { margin: 8px 0 2px; font-size: 11px; text-transform: uppercase; opacity: .65; }
+.partitura-review-list ul { margin: 0; padding-left: 16px; }
+.partitura-review-list dl { margin: 0 0 6px; padding: 8px 10px; border-radius: 10px; background: #8881; }
+.partitura-review-list dt { font-weight: 600; }
+.partitura-review-list dd { margin: 4px 0 0; }
+.partitura-review-list dd > span { display: block; font-size: 10px; text-transform: uppercase; opacity: .6; }
+.partitura-review-list code { display: block; white-space: pre-wrap; font-size: 11.5px; padding: 4px 6px; border-radius: 6px; background: #0003; }
+.partitura-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.partitura-panel .partitura-buttons button { border: 1px solid var(--line); }
+.partitura-panel .partitura-buttons button.primary { background: #1283ff; border-color: #1283ff; color: #fff; }
+.partitura-panel .partitura-buttons button.danger { background: #b3261e; border-color: #b3261e; color: #fff; }

@@ -1,0 +1,11 @@
+.about-identity{display:flex;flex-direction:column;gap:2px}.about-name{font-size:15px;font-weight:600}.about-identity>span+span{font-size:12px;color:var(--s-muted)}
+.about-action{align-self:flex-start}
+.settings-back .settings-dialog .settings-content h3.settings-section-title>button.about-disclosure{display:inline-flex;align-items:center;gap:5px;min-height:0;padding:0;border:0;background:transparent;color:var(--s-muted);font:inherit;letter-spacing:inherit;text-transform:inherit}
+.about-disclosure svg,.third-party-row svg{flex:none;transition:transform .12s}
+.about-disclosure[aria-expanded=true] svg,.third-party-row[aria-expanded=true] svg{transform:rotate(90deg)}
+.settings-content ul.third-party-list{border:1px solid var(--s-line);border-radius:8px}
+.third-party-list>li+li{border-top:1px solid var(--s-line)}
+.settings-back .settings-dialog .settings-content .third-party-list button.third-party-row{display:flex;align-items:center;gap:6px;width:100%;min-height:26px;padding:2px 10px;border:0;border-radius:0;text-align:left}
+.third-party-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.third-party-meta{flex:none;font-size:11px;color:var(--s-muted)}
+.third-party-list small{padding:4px 12px 0}
+.third-party-list pre{max-height:220px;margin:6px 10px 10px;padding:8px;overflow:auto;border-radius:6px;background:var(--s-card);font-size:10.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}

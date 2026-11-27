@@ -1,0 +1,9 @@
+#!/bin/sh
+# CLI do palco: os agentes chamam isto dentro dos terminais do canvas.
+DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+# App empacotado (resources/palco-cli ao lado de resources/app.asar): roda o CLI com o próprio
+# executável do palco em modo Node, para não exigir Node instalado na máquina.
+if [ -f "$DIR/../app.asar" ] && [ -x "$DIR/../../palco" ]; then
+  ELECTRON_RUN_AS_NODE=1 exec "$DIR/../../palco" "$DIR/out/cli/palco.cjs" "$@"
+fi
+exec node "$DIR/out/cli/palco.cjs" "$@"

@@ -1,0 +1,39 @@
+name: Release Linux
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  TZ: UTC
+  LANG: C.UTF-8
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Preparar compilação do node-pty
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential python3
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run dist:linux
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.AppImage dist/*.deb --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

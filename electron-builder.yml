@@ -1,0 +1,44 @@
+appId: io.github.palco
+productName: palco
+executableName: palco
+directories:
+  output: dist
+files:
+  - out/**/*
+  - package.json
+  - '!out/cli/**'
+  - '!bin/**'
+  - '!resources/**'
+asar: true
+asarUnpack:
+  - '**/node_modules/node-pty/**'
+extraResources:
+  - from: bin
+    to: palco-cli/bin
+    filter:
+      - palco
+  - from: out/cli
+    to: palco-cli/out/cli
+    filter:
+      - palco.cjs
+  - from: resources/skills
+    to: skills
+  - from: resources/icons
+    to: icons
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  category: Development
+  icon: resources/icons/palco-512.png
+  syncDesktopName: true
+  desktop:
+    entry:
+      StartupWMClass: palco
+deb:
+  packageName: palco
+  maintainer: Natan

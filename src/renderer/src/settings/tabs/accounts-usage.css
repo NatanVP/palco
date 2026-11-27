@@ -1,0 +1,38 @@
+.account-browser{display:flex;height:380px;overflow:hidden;border:1px solid var(--s-border);border-radius:12px;margin:10px 0}
+.account-clis{width:160px;flex:none;padding:6px;background:color-mix(in srgb,var(--s-fg) 3%,transparent);overflow:auto}
+.account-clis>button{display:flex!important;flex-direction:column;align-items:flex-start!important;width:100%;border:0!important;background:transparent!important;text-align:left;padding:5px 8px!important;gap:2px!important}
+.account-clis>button[aria-selected=true]{background:color-mix(in srgb,var(--s-fg) 10%,transparent)!important}
+.account-clis small,.account-text small,.account-status{font-size:11px;color:var(--muted)}
+.account-cli-panel{flex:1;min-width:0;overflow:auto;padding:14px;border-left:1px solid var(--s-border)}
+.account-cli-panel header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:13px}
+.account-cards{margin:0!important;list-style:none;padding:0!important}
+.account-cards>li{position:relative;display:flex;align-items:center;gap:10px;padding:8px 12px!important}
+.account-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.account-text>*{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.account-status{display:flex;align-items:center;gap:3px;flex:none}.account-menu>button{border:0!important;padding:3px!important;background:transparent!important}
+.account-menu [role=menu]{position:absolute;right:8px;top:calc(100% - 4px);z-index:5;display:flex;flex-direction:column;min-width:160px;padding:4px;border:1px solid var(--s-border);border-radius:6px;background:var(--bg);box-shadow:0 8px 24px #0005}
+.account-menu [role=menuitem]{text-align:left;border:0!important;background:transparent!important}
+.provider-footer{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}.provider-footer button,.account-cli-panel header button{display:inline-flex;align-items:center;gap:4px;font-size:11px!important;padding:3px 7px!important}
+.usage-enable{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}.usage-enable>div{flex:1}.usage-enable label{font-size:13px}.usage-enable .settings-hint{margin-top:4px}
+.usage-providers{padding:0!important;max-height:350px;overflow:auto;margin:0!important;border-radius:6px}
+.usage-provider-row{display:flex;align-items:flex-start;gap:12px;padding:12px}
+/* Um grupo por provedor: a linha dele e, recuadas até o texto dele, as contas ligadas por um fio. */
+.usage-group+.usage-group{border-top:1px solid var(--s-border)}
+.settings-content ul.usage-accounts{margin:-2px 12px 10px 26px;padding:0 0 0 16px;border-left:1px solid var(--s-border)}
+.usage-account-row{display:flex;align-items:center;gap:10px;min-height:36px;padding:3px 0}
+.usage-account-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px!important;font-weight:500}.usage-account-row .usage-provider-text{gap:1px}
+.usage-provider-text{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.usage-provider-row .usage-provider-text>div:first-child{display:flex;align-items:center;gap:6px}.usage-provider-text strong{font-size:13px;font-weight:500}.usage-provider-text small{font-size:11px;color:var(--s-muted)}.usage-provider-text code{font-size:10px;color:var(--s-muted);overflow-wrap:anywhere}
+.provider-badge{border-radius:20px;background:color-mix(in srgb,var(--s-fg) 5%,transparent);color:var(--s-muted);font-size:9px;padding:1px 5px}
+.usage-provider-actions{display:flex;gap:8px;padding-top:2px}.usage-provider-actions button{font-size:11px!important;padding:3px 8px!important}
+.usage-provider-controls{display:flex;flex:none;flex-direction:column;align-items:flex-end;gap:8px}.provider-color{position:relative}.provider-color-trigger{display:grid;place-items:center;width:28px;height:28px;border:0!important;background:transparent!important;padding:0!important}.provider-color-trigger span{width:16px;height:16px;border-radius:50%;border:1px solid #ffffff26}
+.provider-palette{position:fixed;top:0;left:0;z-index:30;background:var(--s-bg);border:1px solid var(--s-border);padding:8px;display:grid;grid-template-columns:repeat(4,24px);gap:6px;border-radius:6px;box-shadow:0 8px 20px #0005}.provider-palette>button{width:24px;height:24px;padding:0!important;border-radius:50%!important}.provider-palette>button[aria-pressed=true]{outline:2px solid var(--s-primary)}.provider-palette>label{grid-column:1/-1;display:flex;gap:6px;font-size:10px;align-items:center}.provider-palette input{width:24px;height:24px;padding:0}
+.provider-footer .refresh-all{margin-left:auto}
+.provider-color-trigger[aria-disabled=true]{opacity:.5;cursor:progress}
+/* Os cartões reaproveitam o contorno dos presets; seus controles têm tamanhos próprios. */
+.settings-back .settings-dialog .settings-content .account-cards .account-menu [role=menuitem]{width:100%;justify-content:flex-start;min-height:26px;padding:4px 8px!important;font-size:12px}
+.settings-back .settings-dialog .settings-content .usage-providers .usage-provider-actions button{width:auto;min-height:22px;border:1px solid var(--s-border);border-radius:6px;background:var(--s-input);color:var(--s-fg)}
+.settings-back .settings-dialog .settings-content .usage-providers .provider-color-trigger{width:28px;min-height:28px}
+.settings-back .settings-dialog .settings-content .usage-providers .provider-palette>button{width:24px;min-height:24px;border:1px solid var(--s-border)}
+.usage-providers{border:1px solid var(--s-line)}
+.account-cards>li:first-child{border-top:0}
+
+.settings-back .settings-dialog .settings-content .usage-providers .provider-palette>.account-color-inherit{grid-column:1/-1;width:auto;height:auto;min-height:24px;border-radius:4px!important;font-size:10px;padding:3px!important}

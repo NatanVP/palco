@@ -1,0 +1,60 @@
+.settings-agent-library > .settings-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.settings-agent-library ul { list-style: none; padding: 0; }
+.settings-agent-library li, .settings-agent-library > article { border-top: 1px solid var(--line); padding: 10px 0; }
+.settings-agent-library strong { display: inline-flex; gap: 6px; align-items: center; }
+.settings-dialog .library-editor { width: min(560px, 90vw); max-height: 82vh; overflow: auto; }
+.library-editor label { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+.library-editor label input:not([type=checkbox]):not([type=color]), .library-editor label select { flex: 1; min-width: 120px; }
+.library-editor textarea { display: block; flex-basis: 100%; min-height: 160px; width: 100%; box-sizing: border-box; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 10px; font: inherit; }
+.library-editor [role=alert], .settings-agent-library > [role=alert] { color: #e57575; white-space: pre-wrap; }
+/* Seletor de Responsabilidades e Prompts. */
+.settings-column > .settings-agent-library { gap: 12px; }
+.library-picker, .library-list, .library-list [role=group], .library-list [role=radiogroup] { display: flex; flex-direction: column; min-width: 0; }
+.library-picker { gap: 8px; }
+.library-list, .library-list [role=group], .library-list [role=radiogroup] { gap: 2px; }
+.settings-content .library-picker input.library-search { width: 100%; box-sizing: border-box; }
+.library-pills { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 1px; }
+.settings-back .settings-dialog .settings-content .library-pills button { flex: none; max-width: 192px; min-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 10px; border: 0; border-radius: 6px; font-size: 11px; font-weight: 500; color: var(--s-muted); }
+.settings-back .settings-dialog .settings-content .library-pills button[aria-checked=true] { background: var(--s-track); color: var(--s-fg); }
+.settings-back .settings-dialog .settings-content .library-list button { min-height: 0; padding: 0; border: 0; background: transparent; }
+.settings-back .settings-dialog .settings-content .library-list button.library-new { display: flex; align-items: center; gap: 10px; align-self: stretch; height: 30px; padding: 0 8px; border: 1px dashed var(--s-border); border-radius: 7px; color: var(--s-muted); font-size: 12px; }
+.settings-back .settings-dialog .settings-content .library-list button.library-new:not(:disabled):hover { background: transparent; color: var(--s-fg); }
+.library-icon { display: flex; flex: none; justify-content: center; width: 22px; }
+.settings-content h4.library-group-title { margin: 0; padding: 10px 0 2px 8px; font-size: 11px; font-weight: 500; letter-spacing: .025em; text-transform: uppercase; color: var(--s-muted); }
+.library-row { padding: 0 6px; border-radius: 7px; }
+.library-row:hover, .library-row.open { background: var(--s-active); }
+.library-row.selected { background: #1283ff26; }
+.library-line { display: flex; align-items: stretch; gap: 4px; height: 30px; }
+.settings-back .settings-dialog .settings-content .library-list .library-line button { display: flex; align-items: center; color: var(--s-muted); border-radius: 5px; }
+.settings-back .settings-dialog .settings-content .library-list .library-line button:hover { background: transparent; }
+.settings-back .settings-dialog .settings-content .library-list .library-line button.library-expand { justify-content: center; width: 16px; flex: none; }
+.library-expand svg { transition: transform .15s; }.library-expand[aria-expanded=true] svg { transform: rotate(90deg); }
+.settings-back .settings-dialog .settings-content .library-list .library-line button.library-select { flex: 1; min-width: 0; gap: 10px; text-align: left; color: var(--s-fg); }
+.library-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.library-usage { flex: none; font-size: 10px; color: var(--s-muted); }
+.library-check { flex: none; color: var(--s-primary); opacity: 0; }.library-row.selected .library-check { opacity: 1; }
+.settings-back .settings-dialog .settings-content .library-list .library-line button.library-delete { justify-content: center; width: 22px; flex: none; }
+.settings-back .settings-dialog .settings-content .library-list .library-line button.library-delete:hover { color: #e57575; }
+.library-description { display: flex; align-items: center; gap: 8px; padding: 0 4px 8px 52px; }
+.library-description p { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; white-space: pre-wrap; font-size: 11px; line-height: 1.38; color: var(--s-muted); }
+.settings-back .settings-dialog .settings-content .library-list .library-description button { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; color: var(--s-muted); }
+.settings-back .settings-dialog .settings-content .library-list button.library-delete-selection { align-self: flex-end; margin: 4px 8px; padding: 4px 8px; border-radius: 6px; color: #e57575; font-size: 12px; }
+.settings-back .settings-dialog .settings-content .library-menu { position: fixed; z-index: 120; display: flex; flex-direction: column; min-width: 180px; padding: 4px; border: 1px solid var(--s-border); border-radius: 8px; background: var(--s-card); box-shadow: 0 10px 30px #0007; }
+.settings-back .settings-dialog .settings-content .library-list .library-menu button { padding: 5px 10px; border-radius: 5px; text-align: left; font-size: 12px; color: var(--s-fg); }
+.settings-back .settings-dialog .settings-content .library-list .library-menu button:hover { background: var(--s-active); }
+.settings-back .settings-dialog .settings-content .library-list .library-menu button.is-danger { color: #e57575; }
+.settings-content .preset-field textarea { width: 100%; box-sizing: border-box; min-height: 96px; resize: vertical; }
+.settings-content .preset-field select { height: 36px; }
+/* Prompts: desfazer, problemas e a pasta. */
+.library-muted { color: var(--s-muted); }
+.library-undo { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.library-undo:empty { display: none; }
+.library-problems p { font-size: 11px; font-weight: 600; }
+.settings-content .library-problems li { display: flex; align-items: baseline; gap: 6px; font-size: 11px; }
+.library-problems li svg { flex: none; align-self: center; color: #e5b454; }.library-problems li span { min-width: 0; color: var(--s-muted); }
+.library-folder { display: flex; flex-wrap: wrap; gap: 8px; }
+.settings-back .settings-dialog .settings-content .library-folder button { display: inline-flex; align-items: center; gap: 6px; }
+/* Locais de skills: o cartão dos presets, com o caminho em mono. */
+.skill-conflict { font-size: 11px; line-height: 1.38; color: #e5b454; }
+.skill-path { font-family: ui-monospace, monospace; }
+.settings-content p.skill-empty { display: flex; align-items: center; justify-content: center; min-height: 120px; border: 1px solid var(--s-line); border-radius: 8px; font-size: 12px; color: var(--s-muted); }

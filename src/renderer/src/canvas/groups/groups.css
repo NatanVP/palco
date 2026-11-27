@@ -1,0 +1,9 @@
+/* Grupos: moldura e cabeçalho (folga 16, borda tracejada 1,5 px, raio 12, pílula de 22 px a 6 px da moldura). */
+.group-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.group-frame { position: absolute; box-sizing: border-box; border: 1.5px dashed var(--group-border, color-mix(in srgb, var(--muted) 35%, transparent)); border-radius: 12px; }
+.group-head { position: absolute; transform: translateY(-28px); height: 22px; pointer-events: auto; }
+.group-head button.group-header { display: flex; align-items: center; gap: 6px; height: 22px; max-width: 240px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--group-border, color-mix(in srgb, var(--muted) 35%, transparent)); background: var(--group-fill, transparent); color: var(--text); font-size: 11px; font-weight: 500; cursor: grab; touch-action: none; }
+.group-head button.group-header:active { cursor: grabbing; }
+.group-head button.group-header > svg { flex: none; color: var(--group-border, var(--muted)); }
+.group-head button.group-header > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-rename { height: 22px; width: 180px; box-sizing: border-box; padding: 0 8px; border-radius: 999px; border: 1px solid var(--accent); background: var(--panel); color: var(--text); font: 500 11px var(--font-sans); outline: none; }
