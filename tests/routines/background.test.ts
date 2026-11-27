@@ -8,6 +8,7 @@ import { RoutineStore } from '../../src/main/routines/routine-store'
 import type { Routine, RoutineExecution, Workspace } from '../../src/shared/model'
 import { parseRoutineInput } from '../../src/main/routines/routine-input'
 import { draftOf, newDraft, toInput } from '../../src/renderer/src/routines/routine-form'
+import { shQuote } from '../../src/shared/agent-command'
 
 const dirs: string[] = []
 const temp = () => { const dir = mkdtempSync(join(tmpdir(), 'palco-background-')); dirs.push(dir); return dir }
@@ -28,7 +29,8 @@ describe('comandos de rotina em segundo plano', () => {
     expect(readFileSync(join(dir, 'criado.txt'), 'utf8')).toBe('arquivo')
   })
   it('limita a saída aos últimos 64 KiB e preserva UTF-8 válido', async () => {
-    const result = await fire(temp())(routine({ content: "node -e 'process.stdout.write(\"á\".repeat(70000)+\"fim\")'" }))
+    const command = `${shQuote(process.execPath)} -e 'process.stdout.write("á".repeat(70000)+"fim")'`
+    const result = await fire(temp())(routine({ content: command }))
     expect(typeof result).toBe('object')
     if (typeof result !== 'object') return
     expect(Buffer.byteLength(result.execution.output)).toBeLessThanOrEqual(65536)
