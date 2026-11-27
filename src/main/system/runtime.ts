@@ -23,7 +23,7 @@ export function wireSystemSources(d: { controller: SystemController; sessions: S
     s.working(id, true); monitor.data(id); clearTimeout(timers.get(id))
     timers.set(id, setTimeout(() => { timers.delete(id); s.working(id, false) }, QUIET_MS))
   })
-  const offExit = d.terminals.onExit(id => { explicit.delete(id); clearTimeout(timers.get(id)); timers.delete(id); monitor.forget(id); s.forget(id) })
+  const offExit = d.terminals.onExit(id => { if (d.terminals.isShuttingDown?.()) return; explicit.delete(id); clearTimeout(timers.get(id)); timers.delete(id); monitor.forget(id); s.forget(id) })
   const seenFloors = new Map<string, string>()
   const floors = (wsId: string, initial = false): void => {
     const ws = d.registry.get(wsId).get()

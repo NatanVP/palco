@@ -1,0 +1,31 @@
+# Pacote do palco para Arch e derivados, montado a partir do .deb gerado pelo electron-builder.
+# Local: `npm run dist:arch`. No AUR, use a URL da release e hashes SHA-256 fixos em `sha256sums`.
+pkgname=palco-bin
+pkgver=${PALCO_VERSION:-0.1.0}
+pkgrel=1
+pkgdesc='Canvas para organizar terminais, agentes de IA e projetos'
+arch=('x86_64')
+url='https://github.com/NatanVP/palco'
+license=('MIT')
+depends=('alsa-lib' 'at-spi2-core' 'gtk3' 'libnotify' 'libsecret' 'libxss' 'libxtst' 'nss' 'util-linux-libs' 'xdg-utils')
+optdepends=('git: andares com worktree'
+            'python: renomear arquivos e mover para a lixeira'
+            'libappindicator: ícone na bandeja')
+provides=('palco')
+conflicts=('palco')
+options=('!strip' '!debug')
+source=("palco_${pkgver}_amd64.deb" 'LICENSE')
+: "${PALCO_DEB_SHA256:?Defina PALCO_DEB_SHA256 e PALCO_LICENSE_SHA256; no AUR use hashes fixos em sha256sums}"
+: "${PALCO_LICENSE_SHA256:?Defina PALCO_DEB_SHA256 e PALCO_LICENSE_SHA256; no AUR use hashes fixos em sha256sums}"
+if [[ ! $PALCO_DEB_SHA256 =~ ^[0-9a-f]{64}$ || ! $PALCO_LICENSE_SHA256 =~ ^[0-9a-f]{64}$ ]]; then
+  echo 'Hashes SHA-256 inválidos; no AUR use valores fixos em sha256sums.' >&2
+  exit 1
+fi
+sha256sums=("$PALCO_DEB_SHA256" "$PALCO_LICENSE_SHA256")
+
+package() {
+  bsdtar -xf "$srcdir"/data.tar.* -C "$pkgdir"
+  install -d "$pkgdir/usr/bin"
+  ln -s /opt/palco/palco "$pkgdir/usr/bin/palco"
+  install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

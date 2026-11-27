@@ -2506,4 +2506,5 @@ export const en: Catalog = {
   'dialogs.NewTerminalDialog.codex': 'Codex',
   'dialogs.NewTerminalDialog.antigravity': 'Antigravity',
   'dialogs.NewTerminalDialog.outro': 'Other',
+  'shutdown.processes': 'Shutting down processes…',
 }

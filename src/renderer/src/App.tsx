@@ -46,6 +46,7 @@ import { WorkspaceRail } from './sidebar/WorkspaceRail'
 import { WorkspaceStyleSheet } from './sidebar/WorkspaceStyleSheet'
 import { createPortal as portalInto } from 'react-dom'
 import { railInset } from './sidebar/sidebar-layout'
+import { ShutdownOverlay } from './ShutdownOverlay'
 
 type Frame = { pos: Vec; size: Size }
 const DEFAULT_CAMERA: Camera = { offset: { x: 0, y: 0 }, zoom: 1 }
@@ -71,6 +72,9 @@ type Dialog =
   | { kind: 'message'; title: string; lines: string[] }
 
 export function App() {
+  const [shuttingDown, setShuttingDown] = useState(false)
+  const confirmShutdownPainted = useCallback(() => window.palco.shutdown.painted(), [])
+  useEffect(() => window.palco.shutdown.onBegin(() => setShuttingDown(true)), [])
   usePreferenceEffects()
   const preferences = usePreferences()
   useLocale() // a interface inteira re-renderiza quando o idioma troca
@@ -793,6 +797,7 @@ export function App() {
           )}
         </div>
       )}
+      {shuttingDown && <ShutdownOverlay label={t('shutdown.processes')} onPainted={confirmShutdownPainted} />}
     </div>
   )
 }

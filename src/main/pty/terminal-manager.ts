@@ -8,7 +8,7 @@ import { mt } from '../i18n'
 import { dialogOpen, promptLanded } from './prompt-landing'
 import { randomBytes } from 'node:crypto'
 import { createRequire } from 'node:module'
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { IPty } from 'node-pty'
 import type { Terminal as HeadlessTerminal } from '@xterm/headless'
@@ -36,12 +36,45 @@ const READY_HOOK_DELAY_MS = 500
 const PASTE_START = '\x1b[200~'
 const PASTE_END = '\x1b[201~'
 
+function isProcessAlive(pid: number): boolean {
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, 'utf8')
+    return stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)[0] !== 'Z'
+  } catch {
+    try { process.kill(pid, 0); return true } catch { return false }
+  }
+}
+
+function liveSessions(sids: Set<number>): Map<number, number[]> {
+  const found = new Map([...sids].map((sid) => [sid, [] as number[]]))
+  try {
+    for (const entry of readdirSync('/proc')) {
+      if (!/^\d+$/.test(entry)) continue
+      try {
+        const stat = readFileSync(`/proc/${entry}/stat`, 'utf8')
+        const fields = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/)
+        const session = Number(fields[3]), members = found.get(session)
+        if (members && fields[0] !== 'Z') members.push(Number(entry))
+      } catch { /* processo terminou durante a enumeração */ }
+    }
+  } catch { /* /proc não existe ou não está disponível */ }
+  return found
+}
+
+function signalPids(pids: number[], signal: NodeJS.Signals): void {
+  for (const pid of pids) { try { process.kill(pid, signal) } catch { /* já encerrou */ } }
+}
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
+
 interface PendingPrompt { text: string; settle?: (sent: boolean) => void }
 
 interface Entry {
   node: TerminalNode
   /** Geração do processo: sobe a cada spawn do mesmo id. */
   gen: number
+  /** Há uma tela (xterm do renderer) ligada: é ela que responde às consultas do programa. */
+  viewed: boolean
   pty: IPty
   screen: HeadlessTerminal
   serializer: SerializeAddonT
@@ -149,6 +182,7 @@ export class TerminalManager {
   }
 
   spawn(node: TerminalNode, restart = false): void {
+    if (this.shuttingDown) return
     if (this.entries.get(node.id)?.running || this.launching.has(node.id)) return
     try { this.opts.beforeSpawn?.(node) } catch (err) { this.opts.onWarning?.(node.id, `skills do palco não instaladas: ${(err as Error).message}`) }
     const role = this.roleFor(node)
@@ -205,6 +239,7 @@ export class TerminalManager {
   }
 
   private readonly launching = new Map<string, AbortController>()
+  private shuttingDown = false
   /** Preparo em andamento de um ambiente (tmux, SSH, Docker, Sandbox). */
   private readonly preparing = new Map<string, Promise<void>>()
   private cancelLaunch(id: string): void {
@@ -229,7 +264,7 @@ export class TerminalManager {
       if (prepared.warning) this.opts.onWarning?.(node.id, prepared.warning)
       if (prepared.remoteCli || prepared.reused) cleanupSettings()
       const remoteBoot = prepared.reused ? '' : prepared.remoteCli ? buildAgentCommand(node.agent, node.command, this.opts.palcoBin, this.roleFor(node), true) : boot
-      const cleanup = () => { cleanupSettings(); void Promise.resolve(prepared.cleanup()).catch(() => this.opts.onWarning?.(node.id, 'Não foi possível limpar a partida do ambiente.')) }
+      const cleanup = () => { cleanupSettings(); void Promise.resolve(prepared.cleanup()).catch(() => { if (!this.shuttingDown) this.opts.onWarning?.(node.id, 'Não foi possível limpar a partida do ambiente.') }) }
       try { this.start(node, prepared.file, prepared.args, prepared.cwd, { ...prepared.env, TERM: 'xterm-256color' }, token, remoteBoot, cleanup) }
       catch (error) { cleanup(); throw error }
     } catch {
@@ -254,11 +289,18 @@ export class TerminalManager {
     const gen = (this.gens.get(node.id) ?? 0) + 1
     this.gens.set(node.id, gen)
     const entry: Entry = {
-      node, gen, pty: proc, screen, serializer, seq: 0, received: 0, running: true, disposed: false,
+      node, gen, viewed: false, pty: proc, screen, serializer, seq: 0, received: 0, running: true, disposed: false,
       timers: new Set(), ready: boot === '', readyScheduled: false, readyFailed: false, bootSent: false, pendingPrompts: [], token, promptHook: false, cleanup
     }
     this.entries.set(node.id, entry)
     this.tokens.set(token, { id: node.id, gen })
+
+    // Consultas ao terminal (o fish 4 espera até 10 s por elas antes de desenhar): ao abrir o app os processos
+    // sobem antes da janela, então quem responde é a tela do main. Com uma tela ligada, ela responde sozinha.
+    screen.onData((reply) => {
+      if (entry.viewed || entry.disposed || !entry.running) return
+      try { proc.write(reply) } catch { /* processo acabou de sair */ }
+    })
 
     proc.onData((data) => {
       if (entry.disposed) return
@@ -279,7 +321,7 @@ export class TerminalManager {
         entry.onStopped = undefined
         if (entry.running) {
           entry.running = false
-          for (const cb of this.exitCbs) cb(node.id, exitCode)
+          if (!this.shuttingDown) for (const cb of this.exitCbs) cb(node.id, exitCode)
         }
         stopped()
         return
@@ -289,6 +331,7 @@ export class TerminalManager {
       this.tokens.delete(entry.token)
       this.clearTimers(entry)
       this.dropPending(entry)
+      if (this.shuttingDown) return
       for (const cb of this.exitCbs) cb(node.id, exitCode)
     })
 
@@ -370,6 +413,19 @@ export class TerminalManager {
     for (let i = 0; i < buf.length; i++) rows.push(buf.getLine(i)?.translateToString(true) ?? '')
     while (rows.length > 0 && rows[rows.length - 1] === '') rows.pop()
     return rows.slice(-lines).join('\n')
+  }
+
+  /** Snapshot para uma tela que passa a mostrar o terminal: o que o main aplicar daqui em diante é ela que responde. */
+  attach(id: string): ReturnType<TerminalManager['snapshot']> {
+    const e = this.entries.get(id)
+    if (e) e.viewed = true
+    return this.snapshot(id)
+  }
+
+  /** A tela deixou de mostrar o terminal: o main volta a responder às consultas. */
+  detach(id: string): void {
+    const e = this.entries.get(id)
+    if (e) e.viewed = false
   }
 
   snapshot(id: string): { data: string; seq: number; gen: number; cols?: number; rows?: number } {
@@ -559,6 +615,43 @@ export class TerminalManager {
 
   killAll(): void {
     for (const id of new Set([...this.entries.keys(), ...this.launching.keys()])) this.kill(id)
+  }
+
+  isShuttingDown(): boolean { return this.shuttingDown }
+
+  /** Encerra os processos das sessões de terminal, sem notificar ouvintes que persistem saídas normais. */
+  async shutdownAll(): Promise<void> {
+    if (this.shuttingDown) return
+    this.shuttingDown = true
+    const ids = new Set([...this.entries.keys(), ...this.launching.keys()])
+    for (const id of ids) { try { this.cancelLaunch(id) } catch { /* uma partida não deve bloquear o encerramento */ } }
+
+    const targets = [...this.entries.values()]
+    // O filho do forkpty vira líder da própria sessão (sid = pid). Ler o sid do /proc logo após o spawn pode
+    // devolver o da sessão do app, quando o filho ainda não chamou setsid: por isso ele nunca é lido de lá.
+    const sids = new Set(targets.map((entry) => entry.pty.pid))
+    // O próprio shell entra mesmo antes do setsid, enquanto o node-pty não avisou a saída dele.
+    const alive = (): number[] => [...new Set([
+      ...[...liveSessions(sids).values()].flat(),
+      ...targets.filter((entry) => entry.running && isProcessAlive(entry.pty.pid)).map((entry) => entry.pty.pid)
+    ])].filter((pid) => pid !== process.pid)
+    const waitUntilGone = async (ms: number, step: number): Promise<void> => {
+      const deadline = Date.now() + ms
+      while (Date.now() < deadline && alive().length > 0) await delay(Math.min(step, Math.max(1, deadline - Date.now())))
+    }
+
+    for (const entry of targets) {
+      this.clearTimers(entry)
+      try { this.dropPending(entry) } catch { /* callbacks de entrega não devem bloquear o encerramento */ }
+    }
+    signalPids(alive(), 'SIGHUP')
+    await waitUntilGone(2000, 50)
+    signalPids(alive(), 'SIGKILL')
+    await waitUntilGone(900, 40)
+    for (const [id, entry] of this.entries) {
+      try { this.release(entry) } catch { /* a falha de limpeza não deve impedir a saída */ }
+      this.entries.delete(id)
+    }
   }
 
   private sendPrompt(e: Entry, text: string): void {

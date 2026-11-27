@@ -23,6 +23,7 @@ import { SystemController, attachSystem } from './system/controller'
 import { electronSystemPorts } from './system/electron-ports'
 import { wireSystemSources } from './system/runtime'
 import { SessionStore } from './system/sessions'
+import { codexThread } from './agents/codex-thread'
 import { ChatService } from './chat/chat-service'
 import { EnvironmentRuntime } from './environments/runtime'
 import { readCliBundle, runStep, which } from './environments/system'
@@ -39,7 +40,7 @@ import { restoreTerminals } from './agents/restore'
 import { PartituraStore } from './partituras/partitura-store'
 import { RoleStore } from './agents/roles'
 import { PresetStore, AgentCatalog } from './agents/presets'
-import { app, BrowserWindow, dialog, Menu, Notification, safeStorage, session, shell, webContents, type WebContents } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, safeStorage, session, shell, webContents, type WebContents } from 'electron'
 import { QUIET_MS } from './activity-monitor'
 import { readdirSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir, cpus, totalmem, release } from 'node:os'
@@ -138,6 +139,24 @@ function createWindow(): void {
   const devUrl = process.env.ELECTRON_RENDERER_URL
   if (devUrl) void win.loadURL(devUrl)
   else void win.loadFile(indexHtml)
+}
+
+function waitForShutdownPaint(target: BrowserWindow | null): Promise<void> {
+  if (!target || target.isDestroyed() || target.webContents.isDestroyed() || !target.isVisible()) return Promise.resolve()
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      ipcMain.removeListener('palco:shutdown:painted', onPainted)
+      resolve()
+    }
+    const onPainted = (event: Electron.IpcMainEvent): void => { if (event.sender === target.webContents) finish() }
+    const timer = setTimeout(finish, 300)
+    ipcMain.on('palco:shutdown:painted', onPainted)
+    try { target.webContents.send('palco:shutdown:begin') } catch { finish() }
+  })
 }
 
 async function boot(): Promise<void> {
@@ -264,7 +283,9 @@ async function boot(): Promise<void> {
     win.focus()
     win.webContents.send(CH.termFocusRequest, id)
   }
-  const sessions = new SessionStore(join(dataRoot, 'sessions.json'))
+  // Sem conta escolhida o terminal usa ~/.codex (o CODEX_HOME herdado pelo app não passa para ele).
+  const sessions = new SessionStore(join(dataRoot, 'sessions.json'), (id, accountId) =>
+    codexThread(id, (accountId === undefined ? undefined : accounts.byId(accountId)?.configDir) ?? join(homedir(), '.codex')).root)
   const vault = new SecretVault(join(dataRoot, 'encrypted-account-keys.json'), {
     available: () => safeStorage.isEncryptionAvailable() && (process.platform !== 'linux' || ['gnome_libsecret','kwallet','kwallet5','kwallet6'].includes(safeStorage.getSelectedStorageBackend())),
     encrypt: value => safeStorage.encryptString(value), decrypt: bytes => safeStorage.decryptString(bytes)
@@ -487,7 +508,7 @@ async function boot(): Promise<void> {
   cleanup.push(() => runner.stop())
 
   cleanup.push(() => registry.flushAll())
-  cleanup.push(() => terminals.killAll())
+  cleanup.push(() => terminals.shutdownAll())
   startOpacity = preferences.get().windowOpacity
   // Menu mínimo: o padrão do Electron tomava Ctrl+W (fechar), Ctrl+= / Ctrl+- / Ctrl+0 (zoom da página) e Ctrl+R, que agora são atalhos do canvas.
   if (process.platform !== 'darwin') {
@@ -510,6 +531,7 @@ app.on('before-quit', (event) => {
   void (async () => {
     if (!pendingDataOperation && system && !await system.mayQuit()) { quitRequested = false; return }
     quitting = true
+    await waitForShutdownPaint(win)
     const tasks = cleanup.reverse()
     cleanup = []
     for (const task of tasks) {

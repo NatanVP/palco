@@ -83,6 +83,7 @@ export interface HistoryApi {
 
 /** API exposta pelo preload em window.palco. Canais IPC: "palco:<area>:<acao>". */
 export interface PalcoApi {
+  shutdown: { onBegin(cb: () => void): () => void; painted(): void }
   about: AboutApi
   stack: {
     /** Nome do fichário; `null` volta ao automático. */
@@ -317,6 +318,8 @@ export interface PalcoApi {
   terminal: {
     /** Snapshot serializado da tela + seq do último chunk incluído + geração do processo (muda a cada restart). */
     attach(id: string): Promise<{ data: string; seq: number; gen: number; cols?: number; rows?: number }>
+    /** A tela deixou de mostrar o terminal: o main volta a responder às consultas do programa. */
+    detach(id: string): void
     /** Quantos terminais usam hoje mais memória (MB) que o limite dado. */
     countAboveMemory(mb: number): Promise<number>
     /** `gen` identifica o processo que emitiu o chunk; `seq` recomeça em 1 a cada geração. */

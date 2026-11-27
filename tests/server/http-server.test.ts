@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
 import { tmpdir } from 'node:os'
@@ -287,6 +287,22 @@ describe('CLI palco', () => {
     const payload = JSON.stringify({ type: 'agent-turn-complete', 'last-assistant-message': 'ok codex' })
     expect((await cli(['hook', 'codex-notify', payload], { PALCO_SOCKET: socket, PALCO_TOKEN: tok(ids.b) })).code).toBe(0)
     expect((await run).out.trim()).toBe('ok codex')
+  })
+
+  it('fim de turno de um subagente do Codex não responde o ask', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'palco-codex-hook-'))
+    try {
+      const meta = { id: 'sub-1', session_id: 'main-1', parent_thread_id: 'main-1', thread_source: 'subagent' }
+      mkdirSync(join(home, 'sessions'), { recursive: true })
+      writeFileSync(join(home, 'sessions', 'rollout-x-sub-1.jsonl'), `${JSON.stringify({ type: 'session_meta', payload: meta })}\n`)
+      const env = { PALCO_SOCKET: socket, PALCO_TOKEN: tok(ids.b), CODEX_HOME: home }
+      const turn = (thread: string, message: string): string => JSON.stringify({ type: 'agent-turn-complete', 'thread-id': thread, 'last-assistant-message': message })
+      const run = cli(['ask', 'Beta', 'oi'], { PALCO_SOCKET: socket, PALCO_TOKEN: tok(ids.a) })
+      await waitFor(() => delivered.length === 1)
+      expect((await cli(['hook', 'codex-notify', turn('sub-1', 'resposta do subagente')], env)).code).toBe(0)
+      expect((await cli(['hook', 'codex-notify', turn('main-1', 'resposta principal')], env)).code).toBe(0)
+      expect((await run).out.trim()).toBe('resposta principal')
+    } finally { rmSync(home, { recursive: true, force: true }) }
   })
 })
 

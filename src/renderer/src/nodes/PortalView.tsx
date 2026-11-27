@@ -31,13 +31,15 @@ export function normalizePortalUrl(input: string): string | null {
  * pelo `webContents`; aqui só avisamos qual webContents pertence ao nó e mostramos a barra de endereço.
  * Trocar o armazenamento ou o agente de usuário recria o webview (a partição só vale na criação), que recarrega a página.
  */
-export function PortalView({ node, workspaceId }: { node: PortalNode; workspaceId: string }) {
+export function PortalView({ node, workspaceId, onFocus }: { node: PortalNode; workspaceId: string; onFocus?(): void }) {
   const partition = portalPartitionFor(node.storage, node.id, workspaceId)
-  return <PortalSurface key={`${partition}|${node.userAgent ?? ''}`} node={node} partition={partition} />
+  return <PortalSurface key={`${partition}|${node.userAgent ?? ''}`} node={node} partition={partition} onFocus={onFocus} />
 }
 
-function PortalSurface({ node, partition }: { node: PortalNode; partition: string }) {
+function PortalSurface({ node, partition, onFocus }: { node: PortalNode; partition: string; onFocus?(): void }) {
   const view = useRef<WebviewElement | null>(null)
+  const onFocusRef = useRef(onFocus)
+  onFocusRef.current = onFocus
   // O src só vale na criação: depois, quem navega é a barra (ou o agente, pelo main). Reaplicar node.url recarregaria a página.
   const initialUrl = useRef(node.url)
   const [address, setAddress] = useState(node.url)
@@ -74,17 +76,20 @@ function PortalSurface({ node, partition }: { node: PortalNode; partition: strin
       const e = event as Event & { errorCode?: number; errorDescription?: string; isMainFrame?: boolean }
       if (e.isMainFrame && e.errorCode !== -3) setProblem(e.errorDescription ?? t('nodes.PortalView.falha_ao_carregar'))
     }
+    const focused = (): void => onFocusRef.current?.()
     el.addEventListener('dom-ready', register)
     el.addEventListener('did-attach', register)
     el.addEventListener('did-navigate', navigated)
     el.addEventListener('did-navigate-in-page', navigated)
     el.addEventListener('did-fail-load', failed)
+    el.addEventListener('focus', focused)
     return () => {
       el.removeEventListener('dom-ready', register)
       el.removeEventListener('did-attach', register)
       el.removeEventListener('did-navigate', navigated)
       el.removeEventListener('did-navigate-in-page', navigated)
       el.removeEventListener('did-fail-load', failed)
+      el.removeEventListener('focus', focused)
     }
   }, [node.id, node.url])
 

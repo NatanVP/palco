@@ -7,7 +7,8 @@ const sessionId = (v: unknown): v is string => typeof v === 'string' && /^[A-Za-
 export class SessionStore {
   private value: Record<string, SavedSession> = {}
   private readOnly = false
-  constructor(private readonly file: string) {
+  /** `codexRoot`: troca o id de um subagente do Codex pelo da conversa principal (registros antigos). */
+  constructor(private readonly file: string, private readonly codexRoot: (sessionId: string, accountId?: string) => string = (id) => id) {
     try {
       const e = readEnvelope<Record<string, SavedSession>>(file, 'agent-sessions', 1); this.readOnly = e.readOnly
       if (e.payload && typeof e.payload === 'object' && !Array.isArray(e.payload)) for (const [id, s] of Object.entries(e.payload)) {
@@ -34,7 +35,10 @@ export class SessionStore {
   forRelaunch(node: TerminalNode, enabled: boolean): TerminalNode {
     const s = this.value[node.id]
     if (!enabled || !s || s.agent !== node.agent || s.cwd !== node.cwd || s.command !== node.command || s.accountId !== node.accountId) return node
-    try { return { ...node, command: resumeCommand(node.command, node.agent, s.sessionId) } } catch { return node }
+    try {
+      const id = node.agent === 'codex' ? this.codexRoot(s.sessionId, node.accountId) : s.sessionId
+      return { ...node, command: resumeCommand(node.command, node.agent, id) }
+    } catch { return node }
   }
 }
 export function resumeCommand(command: string, agent: string, id: string): string {

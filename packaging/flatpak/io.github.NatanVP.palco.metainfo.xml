@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.NatanVP.palco</id>
+  <name>palco</name>
+  <summary>Canvas para organizar terminais, agentes de IA e projetos</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.natanvp">
+    <name>NatanVP</name>
+  </developer>
+  <description>
+    <p>Terminais, notas, navegadores e agentes de IA lado a lado num canvas infinito, conversando entre si.</p>
+    <p>Este pacote não isola o aplicativo: o Flatpak só instala e atualiza. O palco roda direto no sistema, com o mesmo acesso da sua conta e usando as bibliotecas do sistema.</p>
+  </description>
+  <launchable type="desktop-id">io.github.NatanVP.palco.desktop</launchable>
+  <url type="homepage">https://github.com/NatanVP/palco</url>
+  <url type="bugtracker">https://github.com/NatanVP/palco/issues</url>
+  <categories>
+    <category>Development</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>
