@@ -235,6 +235,15 @@ export function Canvas({ ws, camera, onCamera, linkFrom, onLink, selectedConn, o
   const liveRef = useRef(live)
   liveRef.current = live
   const [selectedDrawings, setSelectedDrawings] = useState<ReadonlySet<string>>(new Set())
+  /**
+   * Card selecionado por um clique no corpo: enquanto a seleção for essa, Delete/Backspace não o apagam. Qualquer
+   * outro caminho (cabeçalho, laço, atalho, notificação) muda a seleção ou limpa isto, e volta a apagar.
+   */
+  const bodySelected = useRef<string | null>(null)
+  useEffect(() => {
+    const id = bodySelected.current
+    if (id !== null && !(selection.size === 1 && selection.has(id))) bodySelected.current = null
+  }, [selection])
   /** Ponto de controle da seta curva em arrasto (ainda não gravado). */
   const [overrides, setOverrides] = useState<ReadonlyMap<string, DrawingPatch>>(new Map())
   useEffect(() => { onDrawingsSelectedRef.current?.(selectedDrawings.size > 0 && tool === 'select') }, [selectedDrawings, tool])
@@ -375,6 +384,7 @@ export function Canvas({ ws, camera, onCamera, linkFrom, onLink, selectedConn, o
     const nodeIds = selectedNodeIds(), drawingIds = [...selectedDrawings]
     const action = selectionKeyAction(e, { hasSelection: nodeIds.length + drawingIds.length > 0 })
     if (!action) return
+    if (action.kind === 'delete' && bodySelected.current !== null && selection.has(bodySelected.current)) return
     if (action.kind === 'hold-pan') {
       const modifier = MODIFIERS.includes(e.key)
       if (!modifier) e.preventDefault()
@@ -393,6 +403,7 @@ export function Canvas({ ws, camera, onCamera, linkFrom, onLink, selectedConn, o
       commitGroup(deleteOperations(ws, nodeIds, drawingIds), false)
       onSelectOnly?.(null); setSelectedDrawings(new Set())
     } else if (action.kind === 'select-all') {
+      bodySelected.current = null
       const all = selectAllHits(ws)
       onSelectMany?.(all.nodes); setSelectedDrawings(new Set(all.drawings))
     } else if (action.kind === 'nudge') {
@@ -617,6 +628,7 @@ export function Canvas({ ws, camera, onCamera, linkFrom, onLink, selectedConn, o
         return
       }
       const next = mergeSelection({ nodes: selection, drawings: selectedDrawings }, lassoHits(normRect(d.start, end), ws), d.additive)
+      bodySelected.current = null
       onSelectMany?.([...next.nodes]); setSelectedDrawings(next.drawings)
       return
     }
@@ -1138,7 +1150,13 @@ export function Canvas({ ws, camera, onCamera, linkFrom, onLink, selectedConn, o
             workspaceId={ws.id}
             onCutRemote={window.palco?.links?.remove ? cutRemote : undefined}
             onGoToFloor={onGoToFloor}
-            onToggleSelect={onToggleSelect}
+            onToggleSelect={(id) => { bodySelected.current = null; onToggleSelect(id) }}
+            onBodyFocus={() => {
+              if (linkFrom) { onLink(n.id); return }
+              bodySelected.current = n.id
+              if (!selection.has(n.id)) onSelectOnly?.(n.id)
+            }}
+            onHeaderFocus={() => { bodySelected.current = null }}
             onSelectOnly={(id) => onSelectOnly?.(id)}
             renaming={renaming === n.id}
             onRename={setRenaming}
@@ -1240,6 +1258,8 @@ interface FrameProps {
   onCutRemote?: (linkId: string) => void
   onToggleSelect(id: string): void
   onSelectOnly(id: string): void
+  onBodyFocus(): void
+  onHeaderFocus(): void
   renaming: boolean
   onRename(id: string | null): void
   /** Preso no lugar (bloqueado, ou fichário com um bloqueado): sem alça de redimensionar. */
@@ -1259,13 +1279,21 @@ interface FrameProps {
   onTab?(id: string): void
 }
 
-function NodeFrame({ node, frame, completed = false, lifted = false, docked, onUnlift, linking, isLinkSource, selected, peers, remotePeers = [], onCutRemote, workspaceId, onGoToFloor, onToggleSelect, onSelectOnly, renaming, onRename, onLink, onHeaderDown, onResizeDown, onOpenFile, tabs, stack, onOpenLink, onTab, sizeReadout = false, onUnredact, held = false }: FrameProps) {
+function NodeFrame({ node, frame, completed = false, lifted = false, docked, onUnlift, linking, isLinkSource, selected, peers, remotePeers = [], onCutRemote, workspaceId, onGoToFloor, onToggleSelect, onSelectOnly, onBodyFocus, onHeaderFocus, renaming, onRename, onLink, onHeaderDown, onResizeDown, onOpenFile, tabs, stack, onOpenLink, onTab, sizeReadout = false, onUnredact, held = false }: FrameProps) {
   const kindClass = node.kind === 'terminal' ? node.agent : node.kind
   return (
     <div
       data-node-id={node.id}
       className={`node ${kindClass}${lifted ? ' lifted' : ''}${docked ? ' lifted docked' : ''}${selected ? ' selected' : ''}${isLinkSource ? ' link-source' : ''}${linking && !isLinkSource ? ' link-target' : ''}`}
       style={{ left: frame.pos.x, top: frame.pos.y, width: frame.size.w, height: frame.size.h, ...(frame.scale ? { transform: `scale(${frame.scale})`, transformOrigin: '0 0' } : {}), ...(node.kind === 'note' ? paperVars(node.color) : {}) }}
+      onPointerDownCapture={(e) => {
+        if (e.button === 2 || linking || e.shiftKey) return
+        const header = e.target instanceof Element && e.target.closest('.node-header')
+        if (header) {
+          onHeaderFocus()
+          if (!selected) onSelectOnly(node.id)
+        } else onBodyFocus()
+      }}
       onPointerDown={(e) => {
         e.stopPropagation()
         if (e.button === 2) return
@@ -1369,7 +1397,7 @@ function NodeFrame({ node, frame, completed = false, lifted = false, docked, onU
         {(node.kind === 'terminal' || node.kind === 'portal') && node.unloaded ? <UnloadedCard onWake={() => void window.palco.nodeState.wake(node.id).catch((err: unknown) => console.warn(t('ctx.nao_foi_possivel'), err))} />
           : node.kind === 'terminal' ? <TerminalFace node={node} />
           : node.kind === 'note' ? <NoteView id={node.id} content={node.content} color={node.color} fontSize={node.fontSize} fontFamily={node.fontFamily} locked={node.locked} render={node.render} />
-          : node.kind === 'portal' ? <PortalView node={node} workspaceId={workspaceId} />
+          : node.kind === 'portal' ? <PortalView node={node} workspaceId={workspaceId} onFocus={onBodyFocus} />
           : node.kind === 'text' ? <TextView id={node.id} text={node.text} fontSize={node.fontSize} />
           : node.kind === 'file' ? <FileView path={node.path} />
           : node.kind === 'filetree' ? <FileTreeView root={node.root} {...(node.current !== undefined ? { current: node.current } : {})} onNavigate={(path) => void window.palco.node.patch(node.id, { current: path })} onOpenFile={onOpenFile} />

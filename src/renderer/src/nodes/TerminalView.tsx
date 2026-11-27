@@ -129,13 +129,20 @@ export function TerminalView({ id, fontSize: explicitFontSize, fontFamily: expli
       if (term.textarea && document.activeElement === term.textarea) window.palco.terminal.setFocused(null)
       offData()
       offExit()
+      window.palco.terminal.detach(id)
       term.dispose()
     }
   }, [id])
 
   return (
     <div className="terminal-wrap" style={{ background: theme.colors.background, padding: 0 }}>
-      <div className="terminal-host" ref={host} style={{ background: theme.colors.background, padding: `${preferences.terminalPaddingVertical}px ${preferences.terminalPaddingHorizontal}px` }} onPointerDown={(e) => e.stopPropagation()} />
+      <div className="terminal-host" ref={host} style={{ background: theme.colors.background, padding: `${preferences.terminalPaddingVertical}px ${preferences.terminalPaddingHorizontal}px` }} onPointerDown={(e) => {
+        e.stopPropagation()
+        // Na margem em volta do texto o xterm não pega o foco sozinho; sem isto o teclado ficaria no canvas.
+        if (e.button !== 0 || e.target !== e.currentTarget) return
+        e.preventDefault()
+        termRef.current?.term.focus()
+      }} />
       {exited !== null && (
         <div className="terminal-exited">
           <span>{t('nodes.TerminalView.processo_encerrado_codigo', { code: String(exited) })}</span>

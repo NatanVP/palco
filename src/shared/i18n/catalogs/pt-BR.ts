@@ -2506,4 +2506,5 @@ export const ptBR = {
   'dialogs.NewTerminalDialog.codex': 'Codex',
   'dialogs.NewTerminalDialog.antigravity': 'Antigravity',
   'dialogs.NewTerminalDialog.outro': 'Outro',
+  'shutdown.processes': 'Encerrando processos…',
 } as const

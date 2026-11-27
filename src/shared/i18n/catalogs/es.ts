@@ -1507,4 +1507,5 @@ export const es: Catalog = {
   'dialogs.NewTerminalDialog.codex': 'Codex',
   'dialogs.NewTerminalDialog.antigravity': 'Antigravity',
   'dialogs.NewTerminalDialog.outro': 'Otro',
+  'shutdown.processes': 'Cerrando procesos…',
 }

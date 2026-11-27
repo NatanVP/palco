@@ -15,6 +15,7 @@ import type { Workspace } from '../shared/model'
 
 // Mantido em sincronia com CH em src/main/ipc.ts (o preload cjs não importa do main).
 const CH = {
+  shutdownBegin: 'palco:shutdown:begin', shutdownPainted: 'palco:shutdown:painted',
   prefsGet: 'palco:preferences:get', prefsSet: 'palco:preferences:set', prefsChanged: 'palco:preferences:changed',
   prefsBind: 'palco:preferences:bind', prefsReset: 'palco:preferences:resetShortcuts',
   historyNotice: 'palco:history:notice',
@@ -33,6 +34,7 @@ const CH = {
   connAdd: 'palco:connection:add',
   connRemove: 'palco:connection:remove',
   termAttach: 'palco:terminal:attach',
+  termDetach: 'palco:terminal:detach',
   termData: 'palco:terminal:data',
   termExit: 'palco:terminal:exit',
   termWrite: 'palco:terminal:write',
@@ -130,6 +132,7 @@ function subscribe<A extends unknown[]>(channel: string, cb: (...args: A) => voi
 }
 
 const api: PalcoApi = {
+  shutdown: { onBegin: cb => subscribe(CH.shutdownBegin, cb), painted: () => ipcRenderer.send(CH.shutdownPainted) },
   stack: { rename: (stackId, name) => ipcRenderer.invoke(CH.stackRename, stackId, name) },
   noteFile: {
     unlink: id => ipcRenderer.invoke(CH.noteUnlink, id),
@@ -342,6 +345,7 @@ const api: PalcoApi = {
   },
   terminal: {
     attach: (id) => ipcRenderer.invoke(CH.termAttach, id),
+    detach: (id) => { void ipcRenderer.invoke(CH.termDetach, id).catch(() => {}) },
     countAboveMemory: (mb) => ipcRenderer.invoke(CH.memCount, mb),
     onData: (cb) => subscribe<[string, string, number, number]>(CH.termData, cb),
     onExit: (cb) => subscribe<[string, number]>(CH.termExit, cb),

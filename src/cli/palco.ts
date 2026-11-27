@@ -4,7 +4,9 @@ import { formatList, type ListReply } from './list-format'
 import { helpFor } from './help'
 import { formatFloors, formatPresets, formatRoles, formatLook, formatRoutines, formatWorkspaces } from './text-format'
 import { fstatSync, readFileSync, statSync } from 'node:fs'
-import { basename, resolve } from 'node:path'
+import { basename, join, resolve } from 'node:path'
+import { homedir } from 'node:os'
+import { codexThread } from '../main/agents/codex-thread'
 import http from 'node:http'
 import { ENV_TOKEN, HEADER_TOKEN } from '../shared/auth'
 import { parseEndpoint } from '../shared/endpoint'
@@ -175,6 +177,8 @@ async function runHook(cmd: CliCommand): Promise<void> {
     } else if (cmd.cmd === 'hook-codex-notify') {
       const turn = codexTurn(cmd.payload)
       if (turn === null) return
+      // Fim de turno de subagente não é o fim do turno do terminal, e o id dele não pode ser retomado.
+      if (turn.sessionId && codexThread(turn.sessionId, process.env.CODEX_HOME || join(homedir(), '.codex')).subagent) return
       await request('POST', '/turn-ended', turn, t)
     }
   } catch { /* ignorado de propósito */ }

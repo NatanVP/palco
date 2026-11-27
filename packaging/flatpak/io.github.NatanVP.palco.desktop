@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=palco
+Comment=Canvas para organizar terminais, agentes de IA e projetos
+Exec=palco-launcher
+Icon=io.github.NatanVP.palco
+Terminal=false
+Categories=Development;
+StartupWMClass=io.github.NatanVP.palco

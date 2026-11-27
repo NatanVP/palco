@@ -71,6 +71,7 @@ export const CH = {
   connAdd: 'palco:connection:add',
   connRemove: 'palco:connection:remove',
   termAttach: 'palco:terminal:attach',
+  termDetach: 'palco:terminal:detach',
   termData: 'palco:terminal:data',
   termExit: 'palco:terminal:exit',
   termWrite: 'palco:terminal:write',
@@ -465,7 +466,8 @@ export function registerIpc({ voice, linkedNotes, pickSavePath, preferences, mem
   handle(CH.connAdd, (a, b) => ownerOf(parseId(a)).connect(parseId(a), parseId(b)))
   handle(CH.connRemove, (id) => registry.active().disconnect(parseId(id)))
 
-  handle(CH.termAttach, (id) => terminals.snapshot(parseId(id)))
+  handle(CH.termAttach, (id) => terminals.attach(parseId(id)))
+  handle(CH.termDetach, (id) => terminals.detach(parseId(id)))
   listen(CH.termWrite, (id, data) => terminals.write(parseId(id), parseData(data)))
   handle(CH.shellOpenExternal, async (raw) => {
     const url = parseExternalUrl(raw)
